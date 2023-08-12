@@ -4,6 +4,7 @@ import streamlit as st
 import seaborn as sns
 import matplotlib.pyplot as plt
 from PIL import Image
+import io
 from io import BytesIO
 import os
 
@@ -39,12 +40,9 @@ def convert_df(df):
 # Função para converter o df para excel
 @st.cache
 def to_excel(df):
-    output = BytesIO()
-    writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer, index=False, sheet_name='Sheet1')
-    writer.save()
-    processed_data = output.seek(0)
-    return processed_data
+    csv = df.to_csv(index=False)
+    csv = csv.encode('utf-8')
+    st.download_button(label='Download DataFrame', data=csv)
 
 
 # Função principal da aplicação
@@ -148,10 +146,8 @@ def main():
         st.write('## Após os filtros')
         st.write(bank.head())
 
-        df_xlsx = to_excel(bank)
-        st.download_button(label='📥 Download tabela filtrada em EXCEL',
-                           data=df_xlsx,
-                           file_name='bank_filtered.xlsx')
+        to_excel(bank)
+
         st.markdown("---")
 
         # PLOTS
@@ -166,22 +162,12 @@ def main():
         except:
             st.error('Erro no filtro')
 
-        # Botões de download dos dados dos gráficos
-        col1, col2 = st.columns(2)
 
-        df_xlsx = to_excel(bank_raw_target_perc)
-        col1.write('### Proporção original')
-        col1.write(bank_raw_target_perc)
-        col1.download_button(label='📥 Download',
-                             data=df_xlsx,
-                             file_name='bank_raw_y.xlsx')
+        to_excel(bank_raw_target_perc)
 
-        df_xlsx = to_excel(bank_target_perc)
-        col2.write('### Proporção da tabela com filtros')
-        col2.write(bank_target_perc)
-        col2.download_button(label='📥 Download',
-                             data=df_xlsx,
-                             file_name='bank_y.xlsx')
+
+        to_excel(bank_target_perc)
+
         st.markdown("---")
 
         st.write('## Proporção de aceite')
